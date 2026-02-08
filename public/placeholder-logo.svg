@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-labelledby="title desc">
+<title id="title">Placeholder Logo</title>
+<desc id="desc">Simple circular placeholder used when no logo is configured.</desc>
+<defs>
+  <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#0ea5e9"/>
+    <stop offset="100%" stop-color="#0369a1"/>
+  </linearGradient>
+</defs>
+<rect width="120" height="120" rx="20" fill="url(#g)"/>
+<path d="M35 85c0-18 10-28 25-28s25 10 25 28" fill="none" stroke="#e0f2fe" stroke-width="8" stroke-linecap="round"/>
+<circle cx="50" cy="48" r="10" fill="#e0f2fe"/>
+<circle cx="70" cy="48" r="10" fill="#e0f2fe"/>
+</svg>
