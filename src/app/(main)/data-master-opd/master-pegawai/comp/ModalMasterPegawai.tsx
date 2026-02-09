@@ -29,7 +29,7 @@ export const ModalMasterPegawai: React.FC<Modal> = ({ Data, isOpen, onClose, onS
     const { control, handleSubmit, reset } = useForm<FormValue>({
         defaultValues: {
             kodeOpd: kode_opd,
-            tahun: "",
+            tahun: 0,
             namaPegawai: Data?.namaPegawai,
             nip: Data?.nip,
             email: Data?.email,

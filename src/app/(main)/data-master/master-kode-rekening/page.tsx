@@ -35,7 +35,7 @@ const MasterKodeRekening = () => {
                 <Breadcrumbs items={menu} />
                 <Card>
                     <CardHeader>
-                        <h1 className="font-bold text-lg uppercase text-blue-800">Master Kode Rekening</h1>
+                        <h1 className="font-bold text-lg uppercase text-blue-800">Master Rekening</h1>
                         <ButtonSkyBorder
                             className="flex items-center gap-1"
                             onClick={() => setModalOpen(true)}

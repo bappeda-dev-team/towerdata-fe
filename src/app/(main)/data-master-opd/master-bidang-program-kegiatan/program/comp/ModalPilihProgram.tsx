@@ -30,6 +30,7 @@ export const ModalPilihProgram: React.FC<Modal> = ({ nama_opd, isOpen, onClose, 
     const isSaving = false;
     const saveError: string | null = null;
     const selectionWarningMessage: string | null = null;
+    const isOpdOrTahunMissing = false;
     const isSaveDisabled = ProgramTerpilih.length === 0 || isSaving;
 
     const handleSimpan = async () => {
