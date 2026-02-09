@@ -6,7 +6,8 @@ import { ButtonSky, ButtonRed } from "@/src/components/global/button/Button";
 import { TbPencil, TbTrash } from "react-icons/tb";
 import { ModalMasterOpd } from "./ModalMasterOpd";
 import { AlertQuestion, AlertNotification } from "@/src/lib/helper/sweetalert2";
-import { OpdFindallResponse } from "@/src/app/(main)/data-master/master-opd/master-opd";
+import { OpdFindallResponse } from "@/src/app/(main)/data-master/master-opd/type";
+import { useBrandingContext } from "@/src/providers/BrandingProvider";
 
 interface Table {
     onSuccess: () => void;
@@ -15,21 +16,42 @@ interface Table {
 
 const Table: React.FC<Table> = ({ onSuccess, Data }) => {
 
+    const { branding } = useBrandingContext();
+    const apiUrl = branding?.api_url || "";
     const [ModalMaster, setModalMaster] = useState<boolean>(false);
-    const [DataMaster, setDataMaster] = useState<any>(null);
+    const [DataMaster, setDataMaster] = useState<OpdFindallResponse | null>(null);
 
-    const handleModalMaster = (Data: any) => {
-        if (ModalMaster) {
-            setModalMaster(false);
-            setDataMaster(null);
-        } else {
-            setModalMaster(true);
-            setDataMaster(Data);
-        }
+    const openModalMaster = (Data: OpdFindallResponse) => {
+        setModalMaster(true);
+        setDataMaster(Data);
     }
-    const hapusOpd = () => {
-        AlertNotification("Info", "Fitur ini hanya tampilan.", "info", 2000, true);
-        onSuccess();
+
+    const closeModalMaster = () => {
+        setModalMaster(false);
+        setDataMaster(null);
+    }
+    const hapusOpd = async (kodeOpd: string) => {
+        if (!apiUrl) {
+            AlertNotification("Error", "URL API belum tersedia.", "error", 2000, false);
+            return;
+        }
+
+        try {
+            const response = await fetch(`${apiUrl}/opd/delete/${kodeOpd}`, {
+                method: "DELETE"
+            });
+
+            if (!response.ok) {
+                const errorBody = await response.json().catch(() => null);
+                const message = errorBody?.message || "Gagal menghapus data OPD.";
+                throw new Error(message);
+            }
+
+            AlertNotification("Sukses", "Data OPD berhasil dihapus.", "success", 2000, true);
+            onSuccess();
+        } catch (error) {
+            AlertNotification("Error", error instanceof Error ? error.message : "Terjadi kesalahan saat menghapus.", "error", 2000, true);
+        }
     }
 
     return (
@@ -60,7 +82,7 @@ const Table: React.FC<Table> = ({ onSuccess, Data }) => {
                                     <div className="flex flex-col gap-1">
                                         <ButtonSky
                                             className="flex items-center gap-1"
-                                            onClick={() => handleModalMaster(item)}
+                                            onClick={() => openModalMaster(item)}
                                         >
                                             <TbPencil />
                                             Edit
@@ -68,8 +90,8 @@ const Table: React.FC<Table> = ({ onSuccess, Data }) => {
                                         <ButtonRed
                                             className="flex items-center gap-1"
                                             onClick={() => AlertQuestion("Hapus", "Hapus Data OPD?", "question", "Hapus", "Batal").then((resp) => {
-                                                if (resp.isConfirmed) {
-                                                    hapusOpd();
+                                                if (resp.isConfirmed && item.kodeOpd) {
+                                                    hapusOpd(item.kodeOpd);
                                                 }
                                             })}
                                         >
@@ -90,7 +112,7 @@ const Table: React.FC<Table> = ({ onSuccess, Data }) => {
             {ModalMaster &&
                 <ModalMasterOpd
                     isOpen={ModalMaster}
-                    onClose={() => handleModalMaster(null)}
+                    onClose={closeModalMaster}
                     onSuccess={onSuccess}
                     jenis="edit"
                     Data={DataMaster}

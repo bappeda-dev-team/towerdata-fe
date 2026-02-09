@@ -8,7 +8,7 @@ import { ButtonRed, ButtonSky } from "@/src/components/global/button/Button"
 import { useForm, Controller, SubmitHandler } from "react-hook-form"
 import useToast from "@/src/lib/helper/toast/toast"
 import { LoadingButton } from "@/src/lib/helper/loading"
-import { BidangUrusan } from "@/src/app/(main)/data-master/master-opd/master-opd"
+import { BidangUrusan } from "@/src/types"
 
 interface Modal {
     isOpen: boolean

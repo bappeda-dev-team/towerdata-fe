@@ -6,7 +6,7 @@ import { ButtonSky, ButtonRed } from "@/src/components/global/button/Button"
 import { TbPencil, TbTrash } from "react-icons/tb"
 import { ModalBidangUrusan } from "./ModalBidangUrusan"
 import { AlertQuestion, AlertNotification } from "@/src/lib/helper/sweetalert2"
-import { BidangUrusan } from "@/src/app/(main)/data-master/master-opd/master-opd"
+import { BidangUrusan } from "@/src/types"
 
 interface TableProps {
     Data: BidangUrusan[]
@@ -53,7 +53,7 @@ const Table: React.FC<TableProps> = ({ Data, onSuccess }) => {
                 <tbody>
                     {Data.length > 0 ?
                         Data.map((item: BidangUrusan, index: number) => (
-                            <tr key={item.id || index}>
+                            <tr>
                                 <td className="px-6 py-4 border border-blue-500 text-center">{index + 1}</td>
                                 <td className="px-6 py-4 border border-blue-500">{item.namaBidangUrusan || "-"}</td>
                                 <td className="px-6 py-4 border border-blue-500">{item.kodeBidangUrusan || "-"}</td>

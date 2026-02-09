@@ -7,9 +7,9 @@ import Table from "./comp/Table"
 import { ButtonSkyBorder } from "@/src/components/global/button/Button"
 import { TbCirclePlus } from "react-icons/tb"
 import { ModalBidangUrusan } from "./comp/ModalBidangUrusan"
-import { BidangUrusan } from "@/src/app/(main)/data-master/master-opd/master-opd"
 import { MoonLoading } from "@/src/lib/helper/loading"
 import { ErrorMessage } from "@/src/components/ui/error"
+import { BidangUrusan } from "@/src/types"
 
 const MasterBidang = () => {
     const [ModalOpen, setModalOpen] = useState<boolean>(false)
