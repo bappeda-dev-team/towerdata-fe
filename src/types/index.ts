@@ -20,6 +20,7 @@ export interface GetResponseFindallOpd {
     bidangUrusan: BidangUrusan[];
 }
 export interface BidangUrusan {
+    id?: number;
     kodeBidangUrusan: string;
     namaBidangUrusan: string;
 }

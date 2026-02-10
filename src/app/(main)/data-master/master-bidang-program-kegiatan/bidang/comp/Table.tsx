@@ -11,9 +11,10 @@ import { BidangUrusan } from "@/src/types"
 interface TableProps {
     Data: BidangUrusan[]
     onSuccess: () => void
+    apiUrl: string
 }
 
-const Table: React.FC<TableProps> = ({ Data, onSuccess }) => {
+const Table: React.FC<TableProps> = ({ Data, onSuccess, apiUrl }) => {
 
     const [ModalOpen, setModalOpen] = useState<boolean>(false)
     const [DataModal, setDataModal] = useState<BidangUrusan | null>(null)
@@ -28,9 +29,32 @@ const Table: React.FC<TableProps> = ({ Data, onSuccess }) => {
         }
     }
 
-    const hapusBidang = () => {
-        AlertNotification("Info", "Fitur ini hanya tampilan.", "info", 2000, true)
-        onSuccess()
+    const hapusBidang = async (kode?: string) => {
+        if (!kode) {
+            AlertNotification("Error", "Kode Bidang Urusan tidak tersedia.", "error", 2000, true)
+            return
+        }
+
+        if (!apiUrl) {
+            AlertNotification("Error", "URL API belum tersedia.", "error", 2000, true)
+            return
+        }
+
+        try {
+            const response = await fetch(`${apiUrl}/bidangurusan/delete/${kode}`, {
+                method: "DELETE"
+            })
+            if (!response.ok) {
+                const errorBody = await response.json().catch(() => null)
+                const message = errorBody?.message || "Gagal menghapus data."
+                throw new Error(message)
+            }
+
+            AlertNotification("Berhasil", "Bidang Urusan dihapus.", "success", 2000, true)
+            onSuccess()
+        } catch (error) {
+            AlertNotification("Error", error instanceof Error ? error.message : "Terjadi kesalahan saat menghapus.", "error", 2000, true)
+        }
     }
 
     return (
@@ -51,9 +75,9 @@ const Table: React.FC<TableProps> = ({ Data, onSuccess }) => {
                     </tr>
                 </thead>
                 <tbody>
-                    {Data.length > 0 ?
+                    {Data.length > 0 ? (
                         Data.map((item: BidangUrusan, index: number) => (
-                            <tr>
+                            <tr key={(item.id ?? item.kodeBidangUrusan) ?? index}>
                                 <td className="px-6 py-4 border border-blue-500 text-center">{index + 1}</td>
                                 <td className="px-6 py-4 border border-blue-500">{item.namaBidangUrusan || "-"}</td>
                                 <td className="px-6 py-4 border border-blue-500">{item.kodeBidangUrusan || "-"}</td>
@@ -68,11 +92,13 @@ const Table: React.FC<TableProps> = ({ Data, onSuccess }) => {
                                         </ButtonSky>
                                         <ButtonRed
                                             className="flex items-center gap-1"
-                                            onClick={() => AlertQuestion("Hapus", "Hapus Data Bidang Urusan?", "question", "Hapus", "Batal").then((resp) => {
-                                                if (resp.isConfirmed) {
-                                                    hapusBidang()
-                                                }
-                                            })}
+                                            onClick={() =>
+                                                AlertQuestion("Hapus", "Hapus Data Bidang Urusan?", "question", "Hapus", "Batal").then((resp) => {
+                                                    if (resp.isConfirmed) {
+                                                        hapusBidang(item.kodeBidangUrusan)
+                                                    }
+                                                })
+                                            }
                                         >
                                             <TbTrash />
                                             Hapus
@@ -81,22 +107,23 @@ const Table: React.FC<TableProps> = ({ Data, onSuccess }) => {
                                 </td>
                             </tr>
                         ))
-                        :
+                    ) : (
                         <tr>
                             <td colSpan={4} className="px-6 py-4 font-semibold">Data Kosong, Tambahkan Data Bidang Urusan</td>
                         </tr>
-                    }
+                    )}
                 </tbody>
             </table>
-            {ModalOpen &&
+            {ModalOpen && (
                 <ModalBidangUrusan
                     isOpen={ModalOpen}
                     onClose={() => handleModalOpen(null)}
                     onSuccess={onSuccess}
                     jenis="edit"
                     Data={DataModal}
+                    apiUrl={apiUrl}
                 />
-            }
+            )}
         </TableComponent>
     )
 }

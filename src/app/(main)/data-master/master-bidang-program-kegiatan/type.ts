@@ -24,3 +24,9 @@ export interface GetResponseSubKegiatan {
     createdDate: string;
     lastModifiedDate: string;
 }
+
+export interface GetResponseBidangUrusan {
+    id: number;
+    kodeBidangUrusan: string;
+    namaBidangUrusan: string;
+}
