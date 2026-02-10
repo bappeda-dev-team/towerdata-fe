@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from "react";
 import { ModalComponent } from "@/src/components/ui/modalComponent";
 import { ModalHeader } from "@/src/components/ui/modalHeader";
 import { TbBuildingSkyscraper, TbDeviceFloppy, TbArrowBack } from "react-icons/tb";
@@ -9,6 +10,7 @@ import { LoadingButton } from "@/src/lib/helper/loading";
 import { useForm, Controller, SubmitHandler } from "react-hook-form";
 import useToast from "@/src/lib/helper/toast/toast";
 import { GetResponseSubKegiatan } from "../../type";
+import { useBrandingContext } from "@/src/providers/BrandingProvider";
 
 interface Modal {
     isOpen: boolean;
@@ -22,26 +24,92 @@ interface FormValue {
     namaSubKegiatan: string;
 }
 
+const defaultValues: FormValue = {
+    kodeSubKegiatan: "",
+    namaSubKegiatan: "",
+};
+
 export const ModalSubKegiatan: React.FC<Modal> = ({ Data, isOpen, onClose, onSuccess, jenis }) => {
 
-    const { toastSuccess } = useToast();
+    const { toastSuccess, toastError } = useToast();
+    const { branding } = useBrandingContext();
+    const apiUrl = branding?.api_url || "";
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const { control, handleSubmit, reset } = useForm<FormValue>({
-        defaultValues: {
-            kodeSubKegiatan: Data?.kodeSubKegiatan,
-            namaSubKegiatan: Data?.namaSubKegiatan,
-        }
+        defaultValues: Data
+            ? {
+                kodeSubKegiatan: Data.kodeSubKegiatan,
+                namaSubKegiatan: Data.namaSubKegiatan,
+            }
+            : defaultValues,
     });
-    const proses = false;
 
-    const onSubmit: SubmitHandler<FormValue> = async (data) => {
-        toastSuccess("Perubahan disimpan (tampilan saja)");
-        onSuccess();
-        onClose();
+    useEffect(() => {
+        if (!isOpen) return;
+
+        if (Data) {
+            reset({
+                kodeSubKegiatan: Data.kodeSubKegiatan,
+                namaSubKegiatan: Data.namaSubKegiatan,
+            });
+        } else {
+            reset(defaultValues);
+        }
+    }, [Data, reset, isOpen]);
+
+    const onSubmit: SubmitHandler<FormValue> = async (formValues) => {
+        if (!apiUrl) {
+            toastError("URL API belum tersedia.");
+            return;
+        }
+
+        const isEdit = jenis === "edit";
+        let endpoint = `${apiUrl}/subkegiatan`;
+        let method: "POST" | "PUT" = "POST";
+
+        if (isEdit) {
+            const identifier = Data?.kodeSubKegiatan;
+            if (!identifier) {
+                toastError("Data sub kegiatan tidak tersedia untuk diubah.");
+                return;
+            }
+            endpoint = `${apiUrl}/subkegiatan/update/${identifier}`;
+            method = "PUT";
+        }
+
+        setIsSubmitting(true);
+
+        try {
+            const response = await fetch(endpoint, {
+                method,
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    kodeSubKegiatan: formValues.kodeSubKegiatan,
+                    namaSubKegiatan: formValues.namaSubKegiatan,
+                }),
+            });
+
+            if (!response.ok) {
+                const errorBody = await response.json().catch(() => null);
+                throw new Error(errorBody?.message || "Gagal menyimpan sub kegiatan.");
+            }
+
+            await response.json();
+            toastSuccess(isEdit ? "Sub kegiatan berhasil diperbarui." : "Sub kegiatan berhasil ditambahkan.");
+            onSuccess();
+            handleClose();
+        } catch (error) {
+            toastError(error instanceof Error ? error.message : "Terjadi kesalahan.");
+        } finally {
+            setIsSubmitting(false);
+        }
     }
 
     const handleClose = () => {
-        reset();
+        reset(defaultValues);
         onClose();
     }
 
@@ -78,9 +146,9 @@ export const ModalSubKegiatan: React.FC<Modal> = ({ Data, isOpen, onClose, onSuc
                     <ButtonSky
                         type="submit"
                         className="w-full flex items-center gap-1"
-                        disabled={proses}
+                        disabled={isSubmitting}
                     >
-                        {proses ?
+                        {isSubmitting ?
                             <>
                                 <LoadingButton color="" />
                                 menyimpan...

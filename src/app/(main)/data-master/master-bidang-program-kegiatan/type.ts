@@ -14,9 +14,6 @@ export interface GetResponseSubKegiatan {
     id: number;
     kodeSubKegiatan: string;
     namaSubKegiatan: string;
-    kegiatanId: number | null;
-    createdDate: string;
-    lastModifiedDate: string;
 }
 
 export interface GetResponseBidangUrusan {
