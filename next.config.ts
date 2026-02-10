@@ -53,8 +53,7 @@ const nextConfig: NextConfig = {
   },
   images: {
     domains: ['logo.kertaskerja.cc'],
-  },
-  output: "standalone",
+  }
 };
 
 export default nextConfig;
