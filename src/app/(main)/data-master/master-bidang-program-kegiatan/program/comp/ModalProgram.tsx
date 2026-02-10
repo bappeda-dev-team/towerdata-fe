@@ -1,6 +1,6 @@
 'use client'
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { ModalComponent } from "@/src/components/ui/modalComponent";
 import { ModalHeader } from "@/src/components/ui/modalHeader";
 import { TbBuildingSkyscraper, TbDeviceFloppy, TbArrowBack } from "react-icons/tb";
@@ -10,6 +10,7 @@ import { LoadingButton } from "@/src/lib/helper/loading";
 import { useForm, Controller, SubmitHandler } from "react-hook-form";
 import useToast from "@/src/lib/helper/toast/toast";
 import { GetResponseProgram } from "../../type";
+import { useBrandingContext } from "@/src/providers/BrandingProvider";
 
 interface Modal {
     isOpen: boolean;
@@ -18,34 +19,96 @@ interface Modal {
     jenis: "tambah" | "edit";
     Data: GetResponseProgram | null;
 }
+
 interface FormValue {
     kodeProgram: string;
     namaProgram: string;
 }
 
+const defaultValues: FormValue = {
+    kodeProgram: "",
+    namaProgram: "",
+};
+
 export const ModalProgram: React.FC<Modal> = ({ Data, isOpen, onClose, onSuccess, jenis }) => {
 
-    const { toastSuccess } = useToast();
+    const { toastSuccess, toastError } = useToast();
+    const { branding } = useBrandingContext();
+    const apiUrl = branding?.api_url || "";
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const { control, handleSubmit, reset } = useForm<FormValue>({
-        defaultValues: {
-            kodeProgram: Data?.kodeProgram,
-            namaProgram: Data?.namaProgram,
-        }
+        defaultValues,
     });
 
-    const proses = false;
-
-    const onSubmit: SubmitHandler<FormValue> = async (data) => {
-        toastSuccess("Perubahan disimpan (tampilan saja)");
-        onSuccess();
-        onClose();
-    }
+    useEffect(() => {
+        if (jenis === "edit" && Data) {
+            reset({
+                kodeProgram: Data.kodeProgram,
+                namaProgram: Data.namaProgram,
+            });
+        } else {
+            reset(defaultValues);
+        }
+    }, [Data, jenis, reset]);
 
     const handleClose = () => {
-        reset();
+        reset(defaultValues);
         onClose();
-    }
+    };
+
+    const onSubmit: SubmitHandler<FormValue> = async (formValues) => {
+        if (!apiUrl) {
+            toastError("URL API belum tersedia.");
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            if (jenis === "edit" && !Data) {
+                throw new Error("Data program tidak tersedia untuk diubah.");
+            }
+
+            const identifier = jenis === "edit"
+                ? Data?.kodeProgram
+                : undefined;
+
+            if (jenis === "edit" && !identifier) {
+                throw new Error("Tidak dapat menentukan pengenal program.");
+            }
+
+            const endpoint =
+                jenis === "edit"
+                    ? `${apiUrl}/program/update/${identifier}`
+                    : `${apiUrl}/program`;
+            const method = jenis === "edit" ? "PUT" : "POST";
+
+            const response = await fetch(endpoint, {
+                method,
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(formValues),
+            });
+
+            if (!response.ok) {
+                const errorBody = await response.json().catch(() => null);
+                const message = errorBody?.message || "Gagal menyimpan data.";
+                throw new Error(message);
+            }
+
+            await response.json() as GetResponseProgram;
+            toastSuccess(
+                jenis === "edit" ? "Program berhasil diperbarui." : "Program berhasil disimpan."
+            );
+            onSuccess();
+            handleClose();
+        } catch (error) {
+            toastError(error instanceof Error ? error.message : "Terjadi kesalahan.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     return (
         <ModalComponent isOpen={isOpen} onClose={handleClose}>
@@ -57,6 +120,7 @@ export const ModalProgram: React.FC<Modal> = ({ Data, isOpen, onClose, onSuccess
                 <Controller
                     name="kodeProgram"
                     control={control}
+                    rules={{ required: "Kode Program wajib diisi" }}
                     render={({ field }) => (
                         <FloatingLabelInput
                             {...field}
@@ -68,6 +132,7 @@ export const ModalProgram: React.FC<Modal> = ({ Data, isOpen, onClose, onSuccess
                 <Controller
                     name="namaProgram"
                     control={control}
+                    rules={{ required: "Program wajib diisi" }}
                     render={({ field }) => (
                         <FloatingLabelInput
                             {...field}
@@ -80,9 +145,9 @@ export const ModalProgram: React.FC<Modal> = ({ Data, isOpen, onClose, onSuccess
                     <ButtonSky
                         type="submit"
                         className="w-full flex items-center gap-1"
-                        disabled={proses}
+                        disabled={isSubmitting}
                     >
-                        {proses ?
+                        {isSubmitting ?
                             <>
                                 <LoadingButton color="" />
                                 menyimpan...

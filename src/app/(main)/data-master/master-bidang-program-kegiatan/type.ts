@@ -2,9 +2,6 @@ export interface GetResponseProgram {
     id: number;
     kodeProgram: string;
     namaProgram: string;
-    bidangUrusanId: number | null;
-    createdDate: string;
-    lastModifiedDate: string;
 }
 
 export interface GetResponseKegiatan {

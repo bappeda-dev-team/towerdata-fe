@@ -5,9 +5,9 @@ import { ButtonSky, ButtonRed } from "@/src/components/global/button/Button";
 import { TbPencil, TbTrash } from "react-icons/tb";
 import { useState } from "react";
 import { ModalProgram } from "./ModalProgram";
-import { AlertQuestion } from "@/src/lib/helper/sweetalert2";
+import { AlertQuestion, AlertNotification } from "@/src/lib/helper/sweetalert2";
 import { GetResponseProgram } from "../../type";
-import { AlertNotification } from "@/src/lib/helper/sweetalert2";
+import { useBrandingContext } from "@/src/providers/BrandingProvider";
 
 interface Table {
     Data: GetResponseProgram[];
@@ -16,6 +16,8 @@ interface Table {
 
 const Table: React.FC<Table> = ({ Data, onSuccess }) => {
 
+    const { branding } = useBrandingContext();
+    const apiUrl = branding?.api_url || "";
     const [ModalOpen, setModalOpen] = useState<boolean>(false);
     const [DataModal, setDataModal] = useState<GetResponseProgram | null>(null)
 
@@ -29,9 +31,33 @@ const Table: React.FC<Table> = ({ Data, onSuccess }) => {
         }
     }
 
-    const hapusProgram = () => {
-        AlertNotification("Info", "Fitur ini hanya tampilan.", "info", 2000, true);
-        onSuccess();
+    const hapusProgram = async (kodeProgram?: string) => {
+        if (!apiUrl) {
+            AlertNotification("Error", "URL API belum tersedia.", "error", 2000, false);
+            return;
+        }
+
+        if (!kodeProgram) {
+            AlertNotification("Error", "Kode program tidak ditemukan.", "error", 2000, false);
+            return;
+        }
+
+        try {
+            const response = await fetch(`${apiUrl}/program/delete/${kodeProgram}`, {
+                method: "DELETE",
+            });
+
+            if (!response.ok) {
+                const errorBody = await response.json().catch(() => null);
+                const message = errorBody?.message || "Gagal menghapus data program.";
+                throw new Error(message);
+            }
+
+            AlertNotification("Sukses", "Data program berhasil dihapus.", "success", 2000, true);
+            onSuccess();
+        } catch (error) {
+            AlertNotification("Error", error instanceof Error ? error.message : "Terjadi kesalahan saat menghapus.", "error", 2000, true);
+        }
     }
 
     return (
@@ -71,7 +97,7 @@ const Table: React.FC<Table> = ({ Data, onSuccess }) => {
                                             className="flex items-center gap-1"
                                             onClick={() => AlertQuestion("Hapus", "Hapus Data?", "question", "Hapus", "Batal").then((resp) => {
                                                 if (resp.isConfirmed) {
-                                                    hapusProgram()
+                                                    hapusProgram(item.kodeProgram)
                                                 }
                                             })}
                                         >
