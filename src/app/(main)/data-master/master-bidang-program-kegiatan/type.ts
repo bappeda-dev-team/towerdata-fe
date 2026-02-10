@@ -8,9 +8,6 @@ export interface GetResponseKegiatan {
     id: number;
     kodeKegiatan: string;
     namaKegiatan: string;
-    programId: number | null;
-    createdDate: string;
-    lastModifiedDate: string;
 }
 
 export interface GetResponseSubKegiatan {

@@ -1,13 +1,14 @@
 'use client'
 
 import TableComponent from "@/src/components/ui/tableComponent";
-import { ButtonSky, ButtonRed } from "@/src/components/global/button/Button";
+import { ButtonRed, ButtonSky } from "@/src/components/global/button/Button";
 import { TbPencil, TbTrash } from "react-icons/tb";
 import { useState } from "react";
 import { ModalKegiatan } from "./ModalKegiatan";
 import { AlertQuestion } from "@/src/lib/helper/sweetalert2";
 import { GetResponseKegiatan } from "../../type";
 import { AlertNotification } from "@/src/lib/helper/sweetalert2";
+import { useBrandingContext } from "@/src/providers/BrandingProvider";
 
 interface Table {
     Data: GetResponseKegiatan[];
@@ -18,6 +19,8 @@ const Table: React.FC<Table> = ({ Data, onSuccess }) => {
 
     const [ModalOpen, setModalOpen] = useState<boolean>(false);
     const [DataModal, setDataModal] = useState<GetResponseKegiatan | null>(null)
+    const { branding } = useBrandingContext();
+    const apiUrl = branding?.api_url || "";
 
     const handleModalOpen = (data: GetResponseKegiatan | null) => {
         if(ModalOpen){
@@ -29,22 +32,46 @@ const Table: React.FC<Table> = ({ Data, onSuccess }) => {
         }
     }
 
-    const hapusKegiatan = () => {
-        AlertNotification("Info", "Fitur ini hanya tampilan.", "info", 2000, true);
-        onSuccess();
+    const hapusKegiatan = async (kode: string) => {
+        if (!apiUrl) {
+            AlertNotification("Error", "URL API belum tersedia.", "error", 2000, true);
+            return;
+        }
+
+        try {
+            const response = await fetch(`${apiUrl}/kegiatan/delete/${kode}`, {
+                method: "DELETE",
+            });
+
+            if (!response.ok) {
+                const errorBody = await response.json().catch(() => null);
+                throw new Error(errorBody?.message || "Gagal menghapus data kegiatan.");
+            }
+
+            AlertNotification("Sukses", "Kegiatan berhasil dihapus.", "success", 2000, true);
+            onSuccess();
+        } catch (error) {
+            AlertNotification(
+                "Gagal",
+                error instanceof Error ? error.message : "Terjadi kesalahan.",
+                "error",
+                2000,
+                true
+            );
+        }
     }
     
     return (
-        <TableComponent className={"border-green-500"}>
+        <TableComponent className={"border-blue-500"}>
             <table className="w-full">
                 <thead>
-                    <tr className={"bg-green-500 text-white"}>
+                    <tr className={"bg-blue-500 text-white"}>
                         <th className="border-r border-b py-1 px-2 border-gray-300 w-[50px] text-center">No</th>
                         <th className="border-r border-b py-1 px-2 border-gray-300 min-w-[200px]">Kegiatan</th>
                         <th className="border-r border-b py-1 px-2 border-gray-300 min-w-[200px]">Kode</th>
                         <th className="border-r border-b py-1 px-2 border-gray-300 w-[100px]">Aksi</th>
                     </tr>
-                    <tr className={"bg-green-700 text-white"}>
+                    <tr className={"bg-blue-700 text-white"}>
                         <th className="border-r border-b border-gray-300 text-center">1</th>
                         <th className="border-r border-b border-gray-300 text-center">2</th>
                         <th className="border-r border-b border-gray-300 text-center">3</th>
@@ -55,10 +82,10 @@ const Table: React.FC<Table> = ({ Data, onSuccess }) => {
                     {Data.length > 0 ?
                         Data.map((item: GetResponseKegiatan, index: number) => (
                             <tr key={index}>
-                                <td className={`px-6 py-4 border border-green-500 text-center`}>{index + 1}</td>
-                                <td className={`px-6 py-4 border border-green-500`}>{item.namaKegiatan || "-"}</td>
-                                <td className={`px-6 py-4 border border-green-500`}>{item.kodeKegiatan || "-"}</td>
-                                <td className={`px-6 py-4 border border-green-500`}>
+                                <td className={`px-6 py-4 border border-blue-500 text-center`}>{index + 1}</td>
+                                <td className={`px-6 py-4 border border-blue-500`}>{item.namaKegiatan || "-"}</td>
+                                <td className={`px-6 py-4 border border-blue-500`}>{item.kodeKegiatan || "-"}</td>
+                                <td className={`px-6 py-4 border border-blue-500`}>
                                     <div className="flex flex-col gap-1">
                                         <ButtonSky
                                             className="flex items-center gap-1"
@@ -71,7 +98,7 @@ const Table: React.FC<Table> = ({ Data, onSuccess }) => {
                                             className="flex items-center gap-1"
                                             onClick={() => AlertQuestion("Hapus", "Hapus Data?", "question", "Hapus", "Batal").then((resp) => {
                                                 if (resp.isConfirmed) {
-                                                    hapusKegiatan()
+                                                    hapusKegiatan(item.kodeKegiatan)
                                                 }
                                             })}
                                         >
