@@ -32,7 +32,6 @@ export interface BrandingContextType {
         nama_pemda: string;
         logo: string;
         api_url: string;
-        api_rekening: string;
         tahun: OptionType | null | undefined;
         opd: OptionTypeString | null | undefined;
         jenis_tahun: OptionTypeString | null | undefined;

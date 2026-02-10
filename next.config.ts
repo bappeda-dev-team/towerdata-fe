@@ -4,7 +4,6 @@ function generateCSP() {
   // Daftar domain yang diizinkan
   const allowedDomains = [
     process.env.NEXT_PUBLIC_API_URL,
-    process.env.NEXT_PUBLIC_API_REKENING,
   ].filter(Boolean);
 
   const connectSrc = ["'self'", ...allowedDomains].join(' ');
